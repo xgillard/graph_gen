@@ -1,8 +1,14 @@
 [package]
-name = "graph_gen"
-version = "0.1.0"
-authors = ["Xavier Gillard <xavier.gillard@uclouvain.be>"]
-edition = "2018"
+name          = "graph_gen"
+version       = "0.1.0"
+authors       = ["Xavier Gillard <xavier.gillard@uclouvain.be>"]
+edition       = "2018"
+repository    = "https://github.com/xgillard/graph_gen"
+readme        = "README.md"
+license       = "MIT"
+keywords      = ["graph", "random", "erdos-renyi"]
+categories    = ["science", "mathematics", "algorithms"]
+description   = "Generate pseudo-random graphs based on the Erdos-Renyi G(n,p) model."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

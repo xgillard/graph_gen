@@ -15,6 +15,28 @@ Graph Gen comes with several options:
 
 All necessary info should be available with the built in help.
 
+## Help
+```
+graph_gen 0.1.0
+Convenience tool to generate pseudo random graphs
+
+USAGE:
+    graph_gen [FLAGS] [OPTIONS] --nb_vertices <nb_vertices> --probability <probability>
+
+FLAGS:
+    -d, --digraph    If set, the generated graph will be a digraph
+    -h, --help       Prints help information
+    -l, --loops      If set, self loops are allowed in the generated graph
+    -V, --version    Prints version information
+
+OPTIONS:
+    -n, --nb_vertices <nb_vertices>    The number of vertices in the generated graph
+    -o, --output <output>              The output language (defaults to dimacs)
+    -p, --probability <probability>    The likelihood of any edge to be picked
+    -w, --weights <weights>...         Optional weight candidates
+
+```
+
 ## Build
 Graph Gen was written in Rust. As such, it is compiled with the `cargo` tool.
 So `cargo build --release` will produce the release binary in the `target` folder.

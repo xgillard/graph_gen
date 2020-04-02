@@ -77,7 +77,7 @@ impl ErModel {
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Vertex {
     /// The vertex identifier
-    id: usize
+    id: isize
 }
 
 /// An edge connects two vertices
@@ -99,6 +99,7 @@ impl Edge {
 }
 
 /// A graph as can be random generated
+#[derive(Debug, Clone)]
 pub struct Graph {
     model: ErModel,
     n    : usize,
@@ -122,6 +123,8 @@ impl Graph {
         out.push(format!("c Pseudo-random Erdos-Renyi {} G({}, {})", gtype, self.model.n, self.model.p));
         out.push(format!("c it was generated to{} allow self loops", loops));
         out.push(format!("c This graph has {} vertices and {} edges", self.n, self.list.len()));
+        out.push("c ".to_string());
+        out.push("c Generated w/ graph_gen: https://github.com/xgillard/graph_gen".to_string());
 
         out.push(format!("{} {}", self.n, self.list.len()));
 
@@ -138,7 +141,7 @@ impl Graph {
         let gtype     = if self.model.digraph { "digraph" } else {"graph"};
         let connector = if self.model.digraph { "->" }      else { "--" };
         out.push(format!("{} g {{", gtype));
-        for v in 0..self.n {
+        for v in 1..=self.n {
             out.push(format!("  {};", v));
         }
         for (edge, w) in self.list.iter() {
@@ -147,6 +150,78 @@ impl Graph {
         out.push("}".to_owned());
 
         out.join("\n")
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Max2SatGraph {
+    g: Graph
+}
+impl Max2SatGraph {
+    pub fn new(g: Graph) -> Max2SatGraph {
+        Max2SatGraph{g}
+    }
+    pub fn to_dimacs(&self) -> String {
+        let mut out = vec![];
+
+        let loops = if self.g.model.self_loops { "" } else { " NOT"};
+        out.push(format!("c Pseudo-random max2sat instance generated w/ Erdos-Renyi G({}, {}) model", self.g.model.n, self.g.model.p));
+        out.push(format!("c it was generated to{} allow self loops", loops));
+        out.push(format!("c This instance has {} variables and {} clauses", self.g.n/2, self.g.list.len()));
+        out.push("c ".to_string());
+        out.push("c Each clause reads <weight> <source> <dest> 0".to_string());
+        out.push("c ".to_string());
+        out.push("c Generated w/ graph_gen: https://github.com/xgillard/graph_gen".to_string());
+        out.push(format!("p wcnf {} {}", self.g.n/2, self.g.list.len()));
+
+        for (edge, w) in self.g.list.iter() {
+            out.push(format!("{} {} {} 0", w, self.literal(edge.src), self.literal(edge.dst)));
+        }
+
+        out.join("\n")
+    }
+
+    pub fn to_dot(&self) -> String {
+        let mut out = vec![];
+
+        out.push("graph wcnf {".to_string());
+        for v in 1..=self.g.n/2 {
+            out.push(format!("  {};", v));
+        }
+        for (edge, w) in self.g.list.iter() {
+            out.push(format!("  {} -- {} [label={}];", self.literal(edge.src), self.literal(edge.dst), w));
+        }
+        out.push("}".to_owned());
+
+        out.join("\n")
+    }
+
+    fn literal(&self, v: Vertex) -> isize {
+        let v_id = v.id;
+        if v_id > self.g.n as isize / 2 {
+            -(v_id/2)
+        } else {
+            v_id
+        }
+    }
+}
+
+pub enum Generatable {
+    GenGraph{g: Graph},
+    GenSat  {s: Max2SatGraph}
+}
+impl Generatable {
+    pub fn to_dimacs(&self) -> String {
+        match self {
+            Generatable::GenGraph {g} => g.to_dimacs(),
+            Generatable::GenSat   {s} => s.to_dimacs()
+        }
+    }
+    pub fn to_dot(&self) -> String {
+        match self {
+            Generatable::GenGraph {g} => g.to_dot(),
+            Generatable::GenSat   {s} => s.to_dot()
+        }
     }
 }
 
@@ -176,8 +251,8 @@ impl ErGenerator {
 
         let number = dist.sample(rng);
 
-        let src = (number / self.model.n as u128) as usize;
-        let dst = (number % self.model.n as u128) as usize;
+        let src = (number / self.model.n as u128) as isize;
+        let dst = (number % self.model.n as u128) as isize;
 
         // Typically, graph formats dont like numberings to start at zero,
         // I dont know why because it is sooooooo convenient.

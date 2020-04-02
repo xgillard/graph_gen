@@ -17,7 +17,7 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use graph_gen::{ErModel, Graph};
+use graph_gen::{ErModel, Graph, Max2SatGraph, Generatable};
 use structopt::StructOpt;
 use crate::Output::Dimacs;
 use std::str::FromStr;
@@ -37,6 +37,9 @@ struct Args {
     /// If set, the generated graph will be a digraph
     #[structopt(name="digraph", short, long)]
     digraph: bool,
+    /// If set, the generated graph will be a max2sat instance
+    #[structopt(name="max2sat", short, long)]
+    max2sat: bool,
     /// The output language (defaults to dimacs)
     #[structopt(name="output", short, long)]
     output : Option<Output>,
@@ -72,7 +75,9 @@ impl FromStr for Output {
 
 impl Args {
     fn graph(&self) -> Graph {
-        let mut model = ErModel::new(self.n, self.p);
+        let n = if self.max2sat { 2 * self.n } else { self.n };
+
+        let mut model = ErModel::new(n, self.p);
 
         if self.digraph {
             model = model.digraph();
@@ -91,7 +96,21 @@ impl Args {
         graph
     }
 
-    fn output(&self, g: &Graph) -> String {
+    fn wcnf(&self, g: Graph) -> Max2SatGraph {
+        Max2SatGraph::new(g)
+    }
+
+    fn generatable(&self) -> Generatable {
+        let graph = self.graph();
+
+        if self.max2sat {
+            Generatable::GenSat   {s : self.wcnf(graph)}
+        } else {
+            Generatable::GenGraph {g : graph}
+        }
+    }
+
+    fn output(&self, g: &Generatable) -> String {
         match &self.output {
             None => g.to_dimacs(),
             Some(o) => match o {
@@ -104,7 +123,7 @@ impl Args {
 
 fn main() {
     let args = Args::from_args();
-    let graph= args.graph();
+    let graph= args.generatable();
     let out  = args.output(&graph);
 
     println!("{}", out);

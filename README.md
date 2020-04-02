@@ -10,6 +10,7 @@ and/or find it useful, that's a bonus.
 Graph Gen comes with several options:
 + It lets you build graphs that allow/not allow self loops (`-l` flag)
 + It lets you build directed graph if that is what you need (`-d` flag)
++ It lets you generate a random weighted max2sat instance (`-m` flag)
 + It lets you specify weights that can be used as random labels for the edges of your graph (`-w` option).
 + It lets you output your graph either in DIMACS or in GraphViz format.
 
@@ -17,7 +18,7 @@ All necessary info should be available with the built in help.
 
 ## Help
 ```
-graph_gen 0.1.0
+graph_gen 0.1.2
 Convenience tool to generate pseudo random graphs
 
 USAGE:
@@ -27,6 +28,7 @@ FLAGS:
     -d, --digraph    If set, the generated graph will be a digraph
     -h, --help       Prints help information
     -l, --loops      If set, self loops are allowed in the generated graph
+    -m, --max2sat    If set, the generated graph will be a max2sat instance
     -V, --version    Prints version information
 
 OPTIONS:
@@ -34,7 +36,6 @@ OPTIONS:
     -o, --output <output>              The output language (defaults to dimacs)
     -p, --probability <probability>    The likelihood of any edge to be picked
     -w, --weights <weights>...         Optional weight candidates
-
 ```
 
 ## Build

@@ -179,7 +179,9 @@ impl ErGenerator {
         let src = (number / self.model.n as u128) as usize;
         let dst = (number % self.model.n as u128) as usize;
 
-        Edge { src: Vertex{id: src}, dst: Vertex{id: dst} }
+        // Typically, graph formats dont like numberings to start at zero,
+        // I dont know why because it is sooooooo convenient.
+        Edge { src: Vertex{id: src + 1}, dst: Vertex{id: dst + 1} }
     }
 
     pub fn gen(&mut self) -> Graph {

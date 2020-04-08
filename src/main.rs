@@ -17,7 +17,7 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use graph_gen::{ErModel, Graph, Max2SatGraph, Generatable};
+use graph_gen::{ErModel, Graph, Max2SatGraph, Generatable, MaxCliqueGraph};
 use structopt::StructOpt;
 use crate::Output::Dimacs;
 use std::str::FromStr;
@@ -40,6 +40,9 @@ struct Args {
     /// If set, the generated graph will be a max2sat instance
     #[structopt(name="max2sat", short, long)]
     max2sat: bool,
+    /// If set, the generated graph will be a misp/maxclique instance
+    #[structopt(name="misp", short, long)]
+    misp: bool,
     /// The output language (defaults to dimacs)
     #[structopt(name="output", short, long)]
     output : Option<Output>,
@@ -105,6 +108,8 @@ impl Args {
 
         if self.max2sat {
             Generatable::GenSat   {s : self.wcnf(graph)}
+        } else if self.misp {
+            Generatable::ClqGraph {g : MaxCliqueGraph::new(graph)}
         } else {
             Generatable::GenGraph {g : graph}
         }

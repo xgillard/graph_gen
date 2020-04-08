@@ -123,7 +123,7 @@ impl Graph {
         out.push(format!("c Pseudo-random Erdos-Renyi {} G({}, {})", gtype, self.model.n, self.model.p));
         out.push(format!("c it was generated to{} allow self loops", loops));
         out.push(format!("c This graph has {} vertices and {} edges", self.n, self.list.len()));
-        out.push("c ".to_string());
+        out.push("c -------------------------------------------------------------".to_string());
         out.push("c Generated w/ graph_gen: https://github.com/xgillard/graph_gen".to_string());
 
         out.push(format!("{} {}", self.n, self.list.len()));
@@ -154,6 +154,39 @@ impl Graph {
 }
 
 #[derive(Debug, Clone)]
+pub struct MaxCliqueGraph {
+    g: Graph
+}
+impl MaxCliqueGraph {
+    pub fn new(g: Graph) -> Self {
+        MaxCliqueGraph{g}
+    }
+    pub fn to_dot(&self) -> String {
+        self.g.to_dot()
+    }
+    pub fn to_dimacs(&self) -> String {
+        let mut out = vec![];
+
+        let gtype = if self.g.model.digraph    { "digraph" } else {"graph"};
+        let loops = if self.g.model.self_loops { "" }        else { " NOT"};
+        out.push(format!("c Pseudo-random Erdos-Renyi {} G({}, {})", gtype, self.g.model.n, self.g.model.p));
+        out.push(format!("c it was generated to{} allow self loops", loops));
+        out.push(format!("c This graph has {} vertices and {} edges", self.g.n, self.g.list.len()));
+        out.push("c The edges of this graph are UNWEIGHTED".to_string());
+        out.push("c -------------------------------------------------------------".to_string());
+        out.push("c Generated w/ graph_gen: https://github.com/xgillard/graph_gen".to_string());
+
+        out.push(format!("p edge {} {}", self.g.n, self.g.list.len()));
+
+        for (edge, _w) in self.g.list.iter() {
+            out.push(format!("e {} {}", edge.src.id, edge.dst.id));
+        }
+
+        out.join("\n")
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct Max2SatGraph {
     g: Graph
 }
@@ -168,9 +201,9 @@ impl Max2SatGraph {
         out.push(format!("c Pseudo-random max2sat instance generated w/ Erdos-Renyi G({}, {}) model", self.g.model.n, self.g.model.p));
         out.push(format!("c it was generated to{} allow self loops", loops));
         out.push(format!("c This instance has {} variables and {} clauses", self.g.n/2, self.g.list.len()));
-        out.push("c ".to_string());
+        out.push("c -------------------------------------------------------------".to_string());
         out.push("c Each clause reads <weight> <source> <dest> 0".to_string());
-        out.push("c ".to_string());
+        out.push("c -------------------------------------------------------------".to_string());
         out.push("c Generated w/ graph_gen: https://github.com/xgillard/graph_gen".to_string());
         out.push(format!("p wcnf {} {}", self.g.n/2, self.g.list.len()));
 
@@ -208,18 +241,21 @@ impl Max2SatGraph {
 
 pub enum Generatable {
     GenGraph{g: Graph},
+    ClqGraph {g: MaxCliqueGraph},
     GenSat  {s: Max2SatGraph}
 }
 impl Generatable {
     pub fn to_dimacs(&self) -> String {
         match self {
             Generatable::GenGraph {g} => g.to_dimacs(),
+            Generatable::ClqGraph {g} => g.to_dimacs(),
             Generatable::GenSat   {s} => s.to_dimacs()
         }
     }
     pub fn to_dot(&self) -> String {
         match self {
             Generatable::GenGraph {g} => g.to_dot(),
+            Generatable::ClqGraph {g} => g.to_dot(),
             Generatable::GenSat   {s} => s.to_dot()
         }
     }

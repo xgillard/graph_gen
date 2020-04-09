@@ -154,13 +154,26 @@ impl Graph {
 }
 
 #[derive(Debug, Clone)]
-pub struct MaxCliqueGraph {
-    g: Graph
+pub struct WeightedMaxCliqueGraph {
+    g: Graph,
+    n: usize,
+    w: Vec<isize>
 }
-impl MaxCliqueGraph {
+impl WeightedMaxCliqueGraph {
     pub fn new(g: Graph) -> Self {
-        MaxCliqueGraph{g}
+        let n = g.n;
+        WeightedMaxCliqueGraph{g, n, w: vec![1; n]}
     }
+
+    pub fn pluck_random_weights(&mut self, from: &[isize]) {
+        let mut rng = thread_rng();
+        let dist= Uniform::new(0, from.len());
+
+        for w in self.w.iter_mut() {
+            *w = from[dist.sample(&mut rng)];
+        }
+    }
+
     pub fn to_dot(&self) -> String {
         self.g.to_dot()
     }
@@ -172,12 +185,17 @@ impl MaxCliqueGraph {
         out.push(format!("c Pseudo-random Erdos-Renyi {} G({}, {})", gtype, self.g.model.n, self.g.model.p));
         out.push(format!("c it was generated to{} allow self loops", loops));
         out.push(format!("c This graph has {} vertices and {} edges", self.g.n, self.g.list.len()));
-        out.push("c The edges of this graph are UNWEIGHTED".to_string());
         out.push("c -------------------------------------------------------------".to_string());
         out.push("c Generated w/ graph_gen: https://github.com/xgillard/graph_gen".to_string());
 
         out.push(format!("p edge {} {}", self.g.n, self.g.list.len()));
 
+        out.push("c Vertices weights (defaults to 1)".to_string());
+        for (i, w) in self.w.iter().enumerate() {
+            out.push(format!("n {} {}", 1+i, w));
+        }
+
+        out.push("c Edges list".to_string());
         for (edge, _w) in self.g.list.iter() {
             out.push(format!("e {} {}", edge.src.id, edge.dst.id));
         }
@@ -241,7 +259,7 @@ impl Max2SatGraph {
 
 pub enum Generatable {
     GenGraph{g: Graph},
-    ClqGraph {g: MaxCliqueGraph},
+    ClqGraph {g: WeightedMaxCliqueGraph},
     GenSat  {s: Max2SatGraph}
 }
 impl Generatable {

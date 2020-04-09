@@ -17,7 +17,7 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use graph_gen::{ErModel, Graph, Max2SatGraph, Generatable, MaxCliqueGraph};
+use graph_gen::{ErModel, Graph, Max2SatGraph, Generatable, WeightedMaxCliqueGraph};
 use structopt::StructOpt;
 use crate::Output::Dimacs;
 use std::str::FromStr;
@@ -90,13 +90,7 @@ impl Args {
             model = model.with_self_loops();
         }
 
-        let mut graph = model.generator().gen();
-
-        if let Some(weights) = self.weights.as_ref() {
-            graph.pluck_random_weights(weights);
-        }
-
-        graph
+        model.generator().gen()
     }
 
     fn wcnf(&self, g: Graph) -> Max2SatGraph {
@@ -104,13 +98,27 @@ impl Args {
     }
 
     fn generatable(&self) -> Generatable {
-        let graph = self.graph();
+        let mut graph = self.graph();
 
         if self.max2sat {
+            if let Some(weights) = self.weights.as_ref() {
+                graph.pluck_random_weights(weights);
+            }
+
             Generatable::GenSat   {s : self.wcnf(graph)}
         } else if self.misp {
-            Generatable::ClqGraph {g : MaxCliqueGraph::new(graph)}
+            let mut g = WeightedMaxCliqueGraph::new(graph);
+
+            if let Some(weights) = self.weights.as_ref() {
+                g.pluck_random_weights(weights);
+            }
+
+            Generatable::ClqGraph {g}
         } else {
+            if let Some(weights) = self.weights.as_ref() {
+                graph.pluck_random_weights(weights);
+            }
+
             Generatable::GenGraph {g : graph}
         }
     }

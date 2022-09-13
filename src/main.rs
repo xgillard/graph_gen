@@ -47,7 +47,7 @@ struct Args {
     #[structopt(name="output", short, long)]
     output : Option<Output>,
     /// Optional weight candidates
-    #[structopt(name="weights", short, long)]
+    #[structopt(name="weights", short, long, allow_hyphen_values(true))]
     weights: Option<Vec<isize>>
 }
 enum Output {
